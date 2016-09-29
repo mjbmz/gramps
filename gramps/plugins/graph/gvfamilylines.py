@@ -72,6 +72,9 @@ _COLORS = [{'name' : _("B&W outline"), 'value' : "outline"},
            {'name' : _("Colored outline"), 'value' : "colored"},
            {'name' : _("Color fill"), 'value' : "filled"}]
 
+SIZE_NORMAL = 0
+SIZE_LARGE = 1
+
 #------------------------------------------------------------------------
 #
 # A quick overview of the classes we'll be using:
@@ -236,6 +239,12 @@ class FamilyLinesOptions(MenuReportOptions):
                                        'should appear relative to the name'))
         add_option('imageonside', self.image_location)
 
+        self.image_size = EnumeratedListOption(_('Thumbnail size'), 0)
+        self.image_size.add_item(0, _('Normal'))
+        self.image_size.add_item(1, _('Large'))
+        self.image_size.set_help(_('Size of the thumbnail image'))
+        add_option('imagesize', self.image_size)
+
         # ----------------------------
         add_option = partial(menu.add_option, _('Family Colors'))
         # ----------------------------
@@ -348,6 +357,7 @@ class FamilyLinesReport(Report):
         self._maxchildren = get_value('maxchildren')
         self._incimages = get_value('incimages')
         self._imageonside = get_value('imageonside')
+        self._imagesize = get_value('imagesize')
         self._useroundedcorners = get_value('useroundedcorners')
         self._usesubgraphs = get_value('usesubgraphs')
         self._incdates = get_value('incdates')
@@ -809,9 +819,16 @@ class FamilyLinesReport(Report):
                     media = self._db.get_media_from_handle(media_handle)
                     media_mime_type = media.get_mime_type()
                     if media_mime_type[0:5] == "image":
-                        image_path = get_thumbnail_path(
-                            media_path_full(self._db, media.get_path()),
-                            rectangle=media_list[0].get_rectangle())
+                        if self._imagesize == SIZE_NORMAL:
+                            image_path = get_thumbnail_path(
+                                 media_path_full(self._db, media.get_path()),
+                                 rectangle=media_list[0].get_rectangle(),
+                                 size=SIZE_NORMAL)
+                        elif self._imagesize == SIZE_LARGE:
+                            image_path = get_thumbnail_path(
+                                media_path_full(self._db, media.get_path()),
+                                rectangle=media_list[0].get_rectangle(),
+                                size=SIZE_LARGE)
 
             # put the label together and output this person
             label = ""
